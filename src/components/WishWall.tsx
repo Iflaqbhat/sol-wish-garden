@@ -1,27 +1,53 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Star } from "lucide-react";
+import { toast } from "sonner";
+
+interface Wish {
+  id: number;
+  text: string;
+  author: string;
+  timestamp: number;
+}
 
 const WishWall = () => {
   const [wish, setWish] = useState('');
-  const [wishes] = useState([
-    { id: 1, text: "I wish to learn Solana development", author: "0x...abc" },
-    { id: 2, text: "I hope to build amazing dApps", author: "0x...def" },
-    { id: 3, text: "Wish for world peace", author: "0x...ghi" }
-  ]);
+  const [wishes, setWishes] = useState<Wish[]>([]);
+
+  useEffect(() => {
+    const savedWishes = localStorage.getItem('wishes');
+    if (savedWishes) {
+      setWishes(JSON.parse(savedWishes));
+    }
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Will be implemented with Solana later
-    console.log("Wish submitted:", wish);
+    
+    if (!wish.trim()) {
+      toast.error("Please enter a wish!");
+      return;
+    }
+
+    const newWish: Wish = {
+      id: Date.now(),
+      text: wish.trim(),
+      author: "Anonymous User",
+      timestamp: Date.now()
+    };
+
+    const updatedWishes = [...wishes, newWish];
+    setWishes(updatedWishes);
+    localStorage.setItem('wishes', JSON.stringify(updatedWishes));
+    
+    setWish('');
+    toast.success("Your wish has been added to the wall! ✨");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1A1F2C] to-[#9b87f5] relative overflow-hidden">
-      {/* Starry background */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(50)].map((_, i) => (
           <div
@@ -39,7 +65,6 @@ const WishWall = () => {
       </div>
       
       <div className="relative z-10 container mx-auto px-4 py-16">
-        {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
             Wall of Wishes
@@ -55,7 +80,6 @@ const WishWall = () => {
           </Button>
         </div>
 
-        {/* Wish Form */}
         <form onSubmit={handleSubmit} className="max-w-md mx-auto mb-16">
           <div className="flex gap-4">
             <Input
@@ -72,7 +96,6 @@ const WishWall = () => {
           </div>
         </form>
 
-        {/* Wishes Display */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {wishes.map((wish) => (
             <Card
