@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 interface Wish {
   id: number;
@@ -17,8 +18,9 @@ interface Wish {
 const WishWall = () => {
   const [wish, setWish] = useState('');
   const [wishes, setWishes] = useState<Wish[]>([]);
-  const wallet = useWallet();
+  const { publicKey, connected, connect } = useWallet();
 
+  // Load wishes from localStorage on component mount
   useEffect(() => {
     const savedWishes = localStorage.getItem('wishes');
     if (savedWishes) {
@@ -29,7 +31,7 @@ const WishWall = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!wallet.publicKey) {
+    if (!connected || !publicKey) {
       toast.error("Please connect your wallet first!");
       return;
     }
@@ -40,13 +42,33 @@ const WishWall = () => {
     }
 
     try {
-      // TODO: Implement Solana program interaction
-      // This will be replaced with actual Anchor program call
+      // Create new wish object
+      const newWish: Wish = {
+        id: Date.now(),
+        text: wish,
+        author: publicKey.toString().slice(0, 10) + "...",
+        timestamp: Date.now()
+      };
+
+      // Update state with new wish
+      const updatedWishes = [...wishes, newWish];
+      setWishes(updatedWishes);
+
+      // Save to localStorage
+      localStorage.setItem('wishes', JSON.stringify(updatedWishes));
+
+      // Reset input and show success message
+      setWish('');
       toast.success("Wish submitted successfully! 🌟");
     } catch (error) {
       toast.error("Failed to submit wish");
       console.error(error);
     }
+  };
+
+  // Format timestamp to readable date
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString();
   };
 
   return (
@@ -75,15 +97,7 @@ const WishWall = () => {
           <p className="text-purple-200 text-lg md:text-xl mb-8">
             Record your wishes on the Solana blockchain
           </p>
-          {wallet.connected ? (
-            <Button variant="secondary" className="bg-green-500 hover:bg-green-600 text-white">
-              {wallet.publicKey?.toBase58().slice(0, 6)}...
-            </Button>
-          ) : (
-            <Button variant="secondary" className="bg-purple-500 hover:bg-purple-600 text-white">
-              Connect Wallet
-            </Button>
-          )}
+          <WalletMultiButton className="bg-purple-500 hover:bg-purple-600 text-white mx-auto" />
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-md mx-auto mb-16">
@@ -102,9 +116,17 @@ const WishWall = () => {
           </div>
         </form>
 
-        {/* Wishes section will be dynamically populated from blockchain */}
+        {/* Display wishes */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Wishes will be fetched and rendered here */}
+          {wishes.map((wishItem) => (
+            <Card key={wishItem.id} className="p-6 bg-white/10 backdrop-blur-sm border-purple-300/20">
+              <p className="text-white text-lg mb-4">{wishItem.text}</p>
+              <div className="flex justify-between items-center text-sm text-purple-200">
+                <span>By: {wishItem.author}</span>
+                <span>{formatDate(wishItem.timestamp)}</span>
+              </div>
+            </Card>
+          ))}
         </div>
       </div>
     </div>
