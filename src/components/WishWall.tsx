@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
+import { useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 
 interface Wish {
   id: number;
@@ -15,6 +17,7 @@ interface Wish {
 const WishWall = () => {
   const [wish, setWish] = useState('');
   const [wishes, setWishes] = useState<Wish[]>([]);
+  const wallet = useWallet();
 
   useEffect(() => {
     const savedWishes = localStorage.getItem('wishes');
@@ -23,27 +26,27 @@ const WishWall = () => {
     }
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!wallet.publicKey) {
+      toast.error("Please connect your wallet first!");
+      return;
+    }
+
     if (!wish.trim()) {
       toast.error("Please enter a wish!");
       return;
     }
 
-    const newWish: Wish = {
-      id: Date.now(),
-      text: wish.trim(),
-      author: "Anonymous User",
-      timestamp: Date.now()
-    };
-
-    const updatedWishes = [...wishes, newWish];
-    setWishes(updatedWishes);
-    localStorage.setItem('wishes', JSON.stringify(updatedWishes));
-    
-    setWish('');
-    toast.success("Your wish has been added to the wall! ✨");
+    try {
+      // TODO: Implement Solana program interaction
+      // This will be replaced with actual Anchor program call
+      toast.success("Wish submitted successfully! 🌟");
+    } catch (error) {
+      toast.error("Failed to submit wish");
+      console.error(error);
+    }
   };
 
   return (
@@ -70,14 +73,17 @@ const WishWall = () => {
             Wall of Wishes
           </h1>
           <p className="text-purple-200 text-lg md:text-xl mb-8">
-            Make a wish and store it forever on the Solana blockchain
+            Record your wishes on the Solana blockchain
           </p>
-          <Button
-            variant="secondary"
-            className="bg-purple-500 hover:bg-purple-600 text-white"
-          >
-            Connect Wallet
-          </Button>
+          {wallet.connected ? (
+            <Button variant="secondary" className="bg-green-500 hover:bg-green-600 text-white">
+              {wallet.publicKey?.toBase58().slice(0, 6)}...
+            </Button>
+          ) : (
+            <Button variant="secondary" className="bg-purple-500 hover:bg-purple-600 text-white">
+              Connect Wallet
+            </Button>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-md mx-auto mb-16">
@@ -96,19 +102,9 @@ const WishWall = () => {
           </div>
         </form>
 
+        {/* Wishes section will be dynamically populated from blockchain */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {wishes.map((wish) => (
-            <Card
-              key={wish.id}
-              className="p-6 bg-purple-100/10 backdrop-blur-sm border-purple-300/20 hover:scale-105 transition-transform duration-300 group"
-            >
-              <p className="text-white mb-4">{wish.text}</p>
-              <p className="text-purple-200 text-sm">by {wish.author}</p>
-              <div className="absolute top-2 right-2">
-                <Star className="h-4 w-4 text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            </Card>
-          ))}
+          {/* Wishes will be fetched and rendered here */}
         </div>
       </div>
     </div>

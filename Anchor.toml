@@ -1,0 +1,23 @@
+
+[features]
+seeds = true
+skip-lint = true
+
+[programs.localnet]
+wall_of_wishes = "7QRnXadqnH4A8zx8nEuQLmPASw8W4rV6URDn1ktmx5Hh"
+
+[programs.devnet]
+wall_of_wishes = "7QRnXadqnH4A8zx8nEuQLmPASw8W4rV6URDn1ktmx5Hh"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "./target/deploy/keypair.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[test]
+startup_wait = 10000

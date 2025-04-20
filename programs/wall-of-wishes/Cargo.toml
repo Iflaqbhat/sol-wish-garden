@@ -1,0 +1,13 @@
+
+[package]
+name = "wall-of-wishes"
+version = "0.1.0"
+description = "Solana Wall of Wishes Program"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "wall_of_wishes"
+
+[dependencies]
+anchor-lang = "0.29.0"
